@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tarefas Infantis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4fc3f7;
+            --secondary-color: #ff9800;
+            --success-color: #4caf50;
+            --accent-color: #ffcc80;
+            --background-color: #f0f9ff;
+            --card-color: #ffffff;
+            --text-color: #333;
+            --border-radius: 20px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --day-divider-color: #e1f5fe;
+            --column-divider-color: #b3e5fc;
+            --today-color: #ffeb3b;
+            --today-text-color: #ff6f00;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            background-image: radial-gradient(#b3e5fc 1.5px, transparent 1.5px);
+            background-size: 25px 25px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            touch-action: manipulation;
+        }
+        
+        /* MENU RETRÁTIL */
+        .menu-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100%;
+            background-color: var(--card-color);
+            box-shadow: 5px 0 30px rgba(0, 0, 0, 0.15);
+            z-index: 999;
+            transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px dashed var(--primary-color);
+        }
+        
+        .sidebar-header h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-button {
+            padding: 15px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #5d4037;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 0 #ffb74d;
+        }
+        
+        .nav-button:hover, .nav-button.active {
+            background-color: var(--secondary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .nav-button i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .progress-summary {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+            border-radius: var(--border-radius);
+        }
+        
+        .progress-percentage {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-label {
+            font-size: 1.1rem;
+            color: #01579b;
+            margin-bottom: 15px;
+        }
+        
+        /* BARRA DE PROGRESSO BONITA */
+        .progress-container {
+            width: 100%;
+            background-color: #e0f7fa;
+            border-radius: 50px;
+            overflow: hidden;
+            margin: 20px 0;
+            height: 40px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4fc3f7, #29b6f6, #0288d1);
+            border-radius: 50px;
+            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background-image: linear-gradient(
+                -45deg,
+                rgba(255, 255, 255, 0.2) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0.2) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 50px 50px;
+            animation: moveStripes 2s linear infinite;
+        }
+        
+        @keyframes moveStripes {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            z-index: 2;
+        }
+        
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .go-config-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 0 #f57c00;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .go-config-btn:hover {
+            background-color: #f57c00;
+            transform: translateY(-2px);
+        }
+        
+        /* MODAL DE CONFIGURAÇÕES */
+        .config-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .config-modal.active {
+            display: flex;
+        }
+        
+        .config-content {
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px dashed var(--primary-color);
+        }
+        
+        .config-header h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-config {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-config:hover {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .config-section {
+            margin-bottom: 30px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .config-section h3 {
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* CONFIGURAÇÃO DO NOME DA CRIANÇA */
+        .nome-crianca-container {
+            background-color: #fff8e1;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #ffd54f;
+            margin-bottom: 20px;
+        }
+        
+        .nome-crianca-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ffd54f;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* CONFIGURAÇÃO DE PRÊMIO */
+        .premio-desc-container {
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #81c784;
+            margin-bottom: 15px;
+        }
+        
+        .premio-desc-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #81c784;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* TOGGLE PARA ATIVAR/DESATIVAR PRÊMIO */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+        }
+        
+        .toggle-label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--success-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .emoji-range-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px dashed #b3e5fc;
+            margin-bottom: 20px;
+        }
+        
+        .emoji-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+        }
+        
+        .emoji-row span {
+            margin-right: 15px;
+            font-size: 2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .range-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-grow: 1;
+            flex-wrap: wrap;
+        }
+        
+        .range-inputs input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #b3e5fc;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .delete-emoji-btn {
+            background-color: #ff5252;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .add-emoji-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .premio-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .premio-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #e1f5fe;
+        }
+        
+        .premio-box span {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .premio-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #b3e5fc;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .add-tarefa-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .add-tarefa-form input {
+            flex-grow: 1;
+            padding: 15px;
+            border: 2px solid #b3e5fc;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .add-tarefa-form button {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            cursor: pointer;
+            font-size: 1.3rem;
+        }
+        
+        .tarefas-lista {
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #e0f7fa;
+        }
+        
+        .tarefa-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        /* BOTÕES DE AÇÃO NAS CONFIGURAÇÕES */
+        .config-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .save-config-btn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #388e3c;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .save-config-btn:hover {
+            background-color: #388e3c;
+            transform: translateY(-2px);
+        }
+        
+        .reset-config-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #f57c00;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .reset-config-btn:hover {
+            background-color: #f57c00;
+            transform: translateY(-2px);
+        }
+        
+        /* ANIMAÇÃO DE SALVAR */
+        @keyframes saveSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .save-success {
+            animation: saveSuccess 0.5s ease-in-out;
+        }
+        
+        /* FEEDBACK DE SALVAMENTO */
+        .save-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 4000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .save-feedback.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        
+        /* OVERLAY PARA FECHAR MENU */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        /* CONTEÚDO PRINCIPAL */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 0;
+            transition: margin-left 0.4s;
+        }
+        
+        .main-content.shifted {
+            margin-left: 280px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 15px;
+            background: linear-gradient(135deg, var(--primary-color), #29b6f6);
+            border-radius: var(--border-radius);
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-30px, -30px) rotate(360deg); }
+        }
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0 #0288d1;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* BARRA DE PROGRESSO PRINCIPAL */
+        .main-progress-container {
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .main-progress-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        /* BOTÃO DE REINICIAR */
+        .restart-button-container {
+            text-align: center;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .restart-button {
+            background: linear-gradient(135deg, var(--secondary-color), #ff5722);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #e64a19;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .restart-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #e64a19;
+        }
+        
+        /* ÁREA DE CELEBRAÇÃO */
+        .emoji-grande-container {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+            border-radius: var(--border-radius);
+            margin: 0 0 20px 0;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .emoji-grande {
+            font-size: 6rem;
+            display: inline-block;
+            animation: bounce 2s infinite;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            margin-bottom: 15px;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* CARTÃO DE PRÊMIO NA CELEBRAÇÃO */
+        .premio-card {
+            background: linear-gradient(135deg, #fff9c4, #ffecb3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 3px dashed #ffb300;
+            text-align: center;
+            display: none;
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .premio-card h4 {
+            color: #ff6f00;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .premio-card p {
+            font-size: 1.2rem;
+            color: #5d4037;
+            font-weight: bold;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            border: 2px solid #ffd54f;
+        }
+        
+        /* QUADRO DE TAREFAS */
+        .task-board-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .task-board-header {
+            display: grid;
+            grid-template-columns: 2fr repeat(7, 1fr) 0.8fr;
+            background: linear-gradient(to right, var(--primary-color), #29b6f6);
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            text-align: center;
+            gap: 2px;
+            position: relative;
+        }
+        
+        /* DESTAQUE DO DIA ATUAL NO CABEÇALHO */
+        .task-board-header .today-header {
+            background: linear-gradient(135deg, var(--today-color), #ffca28);
+            color: var(--today-text-color);
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .task-board-header .today-header::after {
+            content: 'HOJE';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 0.6rem;
+            background-color: #ff6f00;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+        
+        /* DIVISÕES ENTRE OS DIAS NO CABEÇALHO */
+        .task-board-header .day-header {
+            background-color: var(--secondary-color);
+            padding: 10px 5px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-right: 2px solid var(--day-divider-color);
+        }
+        
+        /* Remove a borda direita do último dia */
+        .task-board-header .day-header:nth-child(8) {
+            border-right: none;
+        }
+        
+        /* Adiciona borda direita na coluna de tarefas */
+        .task-board-header .tarefa-header {
+            text-align: left;
+            padding-left: 20px;
+            border-right: 2px solid var(--column-divider-color);
+        }
+        
+        /* CABEÇALHO DA COLUNA 9 VAZIO */
+        .task-board-header .vazio-header {
+            background-color: var(--accent-color);
+            color: #5d4037;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px;
+        }
+        
+        .task-board-header .day-emoji {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .task-board-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 520px);
+            min-height: 300px;
+            position: relative;
+        }
+        
+        .task-row {
+            display: grid;
+            grid-template-columns: 2fr repeat(7, 1fr) 0.8fr;
+            align-items: center;
+            transition: all 0.3s;
+            gap: 2px;
+            position: relative;
+            min-height: 60px;
+        }
+        
+        /* TARJA ESQUERDA - TRANSPARENTE POR PADRÃO */
+        .task-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background-color: transparent;
+            transition: background-color 0.3s;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        /* TARJA VERDE QUANDO COMPLETA */
+        .task-row.completed::before {
+            background-color: var(--success-color);
+        }
+        
+        /* DESTAQUE DO DIA ATUAL NAS CÉLULAS */
+        .task-row .today-cell {
+            background-color: rgba(255, 235, 59, 0.2);
+            position: relative;
+        }
+        
+        .task-row .today-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--today-color);
+            border-radius: 0 0 3px 3px;
+        }
+        
+        /* DIVISÕES ENTRE OS DIAS NAS LINHAS */
+        .task-row .day-cell {
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 15px 5px;
+            border-right: 2px solid var(--day-divider-color);
+            position: relative;
+        }
+        
+        /* Remove a borda direita do último dia */
+        .task-row .day-cell:nth-child(8) {
+            border-right: none;
+        }
+        
+        /* Adiciona borda direita na coluna de tarefas */
+        .task-row .task-description {
+            padding: 0 15px;
+            font-weight: bold;
+            color: #01579b;
+            display: flex;
+            align-items: center;
+            border-right: 2px solid var(--column-divider-color);
+            height: 100%;
+            gap: 10px;
+        }
+        
+        /* BOTÃO DE REMOVER TAREFA */
+        .remove-task-btn {
+            background-color: transparent;
+            border: none;
+            color: #ff5252;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .remove-task-btn:hover {
+            background-color: rgba(255, 82, 82, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .task-row:nth-child(even) {
+            background-color: #f8fdff;
+        }
+        
+        .task-row:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .task-row.completed {
+            background-color: #f1f8e9;
+        }
+        
+        /* LINHA DIVISÓRIA ENTRE AS TAREFAS */
+        .task-row:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #e0f7fa, transparent);
+        }
+        
+        .task-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #b3e5fc;
+            border-radius: 10px;
+            font-size: 1rem;
+            background-color: white;
+            flex-grow: 1;
+        }
+        
+        .day-checkbox {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            accent-color: var(--success-color);
+        }
+        
+        .day-checkbox:checked {
+            animation: checkPop 0.3s;
+        }
+        
+        @keyframes checkPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .task-emoji-cell {
+            text-align: center;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        
+        .add-task-row-btn {
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .add-task-row-btn:hover {
+            background-color: #388e3c;
+        }
+        
+        /* CELEBRAÇÃO */
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .big-emoji {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 8rem;
+            z-index: 2001;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            animation: emojiPop 1s ease-out forwards;
+            display: none;
+        }
+        
+        @keyframes emojiPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            70% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        .firework {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px;
+        }
+        
+        .congrats-message {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: linear-gradient(45deg, var(--secondary-color), #ff5722);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2002;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            opacity: 0;
+            display: none;
+            animation: messageSlide 1s ease-out 0.5s forwards;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        @keyframes messageSlide {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        /* ESTADO VAZIO */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #b3e5fc;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        
+        /* BOTÃO DE AJUDA */
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            z-index: 100;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .help-button:hover {
+            transform: scale(1.1);
+        }
+        
+        /* RESPONSIVO */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+            
+            .main-content.shifted {
+                margin-left: 260px;
+            }
+            
+            .task-board-header {
+                font-size: 0.9rem;
+            }
+            
+            .task-board-header .day-emoji {
+                font-size: 1.3rem;
+            }
+            
+            .task-board-body {
+                max-height: calc(100vh - 500px);
+            }
+            
+            .config-content {
+                padding: 20px;
+            }
+            
+            .premio-config {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                left: -100%;
+            }
+            
+            .main-content.shifted {
+                margin-left: 0;
+            }
+            
+            .task-board-header, .task-row {
+                grid-template-columns: 1.5fr repeat(7, 1fr) 0.8fr;
+            }
+            
+            .task-board-body {
+                max-height: calc(100vh - 480px);
+            }
+            
+            .config-modal {
+                padding: 10px;
+            }
+        }
+        
+        @media (max-height: 800px) {
+            .task-board-body {
+                max-height: calc(100vh - 460px);
+            }
+            
+            .config-content {
+                max-height: 85vh;
+            }
+        }
+        
+        /* ANIMAÇÕES */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .new-task {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        /* FEEDBACK TÁTIL */
+        .day-cell:active, .nav-button:active, .add-task-row-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <!-- MENU RETRÁTIL -->
+    <button class="menu-toggle" id="menu-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-chart-line"></i> Progresso</h2>
+            <p id="nome-crianca-sidebar">Acompanhe seu desempenho</p>
+        </div>
+        
+        <div class="progress-summary">
+            <div class="progress-percentage" id="progress-percentage">0%</div>
+            <div class="progress-label">Conclusão Geral</div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="main-progress-bar" style="width: 0%">
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+            </div>
+            
+            <div class="progress-stats">
+                <div><i class="fas fa-check-circle" style="color: var(--success-color);"></i> <span id="completed-count">0</span> concluídas</div>
+                <div><i class="fas fa-tasks" style="color: var(--primary-color);"></i> <span id="total-count">0</span> tarefas</div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-button" id="refresh-stats">
+                <i class="fas fa-sync-alt"></i> Atualizar Dados
+            </button>
+            <button class="nav-button" id="view-history">
+                <i class="fas fa-history"></i> Ver Histórico
+            </button>
+        </div>
+        
+        <button class="go-config-btn" id="go-config-btn">
+            <i class="fas fa-cog"></i> Configurações
+        </button>
+    </div>
+    
+    <!-- FEEDBACK DE SALVAMENTO -->
+    <div class="save-feedback" id="save-feedback">
+        <i class="fas fa-check-circle"></i>
+        <span>Configurações Salvas!</span>
+    </div>
+    
+    <!-- MODAL DE CONFIGURAÇÕES -->
+    <div class="config-modal" id="config-modal">
+        <div class="config-content">
+            <div class="config-header">
+                <h2><i class="fas fa-cog"></i> Configurações</h2>
+                <button class="close-config" id="close-config">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- CONFIGURAÇÃO DO NOME DA CRIANÇA -->
+            <div class="config-section">
+                <h3><i class="fas fa-child"></i> Nome da Criança</h3>
+                <p>Digite o nome para personalizar o sistema:</p>
+                
+                <div class="nome-crianca-container">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <i class="fas fa-user" style="font-size: 2rem; color: #ff9800;"></i>
+                    </div>
+                    <input type="text" class="nome-crianca-input" id="nome-crianca" placeholder="Digite o nome da criança..." maxlength="30">
+                    <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem;">
+                        O nome aparecerá no título: "Tarefas de [Nome]"
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CONFIGURAÇÃO DE PRÊMIOS -->
+            <div class="config-section">
+                <h3><i class="fas fa-gift"></i> Sistema de Prêmios</h3>
+                <p>Configure o prêmio que será exibido quando completar 100%:</p>
+                
+                <div class="premio-desc-container">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <i class="fas fa-gift" style="font-size: 2rem; color: #4caf50;"></i>
+                    </div>
+                    <textarea class="premio-desc-input" id="premio-descricao" placeholder="Digite a descrição do prêmio (ex: 'Um passeio no parque', '30 minutos extra de tablet', etc.)" rows="3" maxlength="200"></textarea>
+                    <div style="text-align: center; margin-top: 5px; color: #666; font-size: 0.9rem;">
+                        Este prêmio será mostrado na celebração quando todas as tarefas forem completadas.
+                    </div>
+                </div>
+                
+                <div class="toggle-container">
+                    <span class="toggle-label">Mostrar prêmio na celebração</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="premio-ativo">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- CONFIGURAÇÃO DE EMOJIS -->
+            <div class="config-section">
+                <h3><i class="fas fa-smile"></i> Emojis por Porcentagem</h3>
+                <p>Defina os emojis que aparecem conforme o progresso diário:</p>
+                
+                <div class="emoji-range-container" id="emoji-ranges">
+                    <!-- Emojis serão adicionados dinamicamente aqui -->
+                </div>
+                
+                <button class="add-emoji-btn" id="add-emoji-btn">
+                    <i class="fas fa-plus"></i> Adicionar Novo Emoji
+                </button>
+            </div>
+            
+            <!-- CONFIGURAÇÃO DE EMOJIS DE PRÊMIO -->
+            <div class="config-section">
+                <h3><i class="fas fa-trophy"></i> Emojis de Recompensa</h3>
+                <p>Configure os emojis que aparecem como recompensa:</p>
+                
+                <div class="premio-config">
+                    <div class="premio-box">
+                        <span id="preview-geral">🏆</span>
+                        <div>Prêmio Geral</div>
+                        <input type="text" id="premio-geral" value="🏆" maxlength="2">
+                    </div>
+                    <div class="premio-box">
+                        <span id="preview-dia">⭐</span>
+                        <div>Prêmio Diário</div>
+                        <input type="text" id="premio-dia" value="⭐" maxlength="2">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CADASTRO DE TAREFAS -->
+            <div class="config-section">
+                <h3><i class="fas fa-tasks"></i> Tarefas Cadastradas</h3>
+                <p>Adicione novas tarefas que poderão ser usadas no quadro:</p>
+                
+                <div class="add-tarefa-form">
+                    <input type="text" id="nova-tarefa" placeholder="Digite a nova tarefa...">
+                    <button id="add-tarefa-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <div class="tarefas-lista" id="lista-tarefas">
+                    <!-- Tarefas serão adicionadas dinamicamente aqui -->
+                </div>
+            </div>
+            
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="config-buttons">
+                <button class="save-config-btn" id="save-config-btn">
+                    <i class="fas fa-save"></i> Salvar Configurações
+                </button>
+                
+                <button class="reset-config-btn" id="reset-quadro-btn">
+                    <i class="fas fa-redo"></i> Reiniciar Quadro de Tarefas
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content" id="main-content">
+        <header>
+            <h1><i class="fas fa-star"></i> <span id="titulo-principal">Tarefas Infantis</span> <i class="fas fa-star"></i></h1>
+            <p>Complete suas tarefas diárias e ganhe recompensas!</p>
+        </header>
+        
+        <!-- BARRA DE PROGRESSO PRINCIPAL -->
+        <div class="main-progress-container">
+            <div class="main-progress-title">Seu Progresso da Semana</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="home-progress-bar" style="width: 0%">
+                    <div class="progress-text" id="home-progress-text">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BOTÃO DE REINICIAR (APARECE QUANDO 100%) -->
+        <div class="restart-button-container" id="restart-button-container">
+            <button class="restart-button" id="restart-button">
+                <i class="fas fa-redo"></i> Reiniciar Todas as Tarefas
+            </button>
+        </div>
+        
+        <!-- ÁREA DE CELEBRAÇÃO (QUANDO 100%) -->
+        <div id="emoji-grande-container" class="emoji-grande-container" style="display: none;">
+            <div class="emoji-grande" id="emoji-grande">🏆</div>
+            <h3 style="color: var(--secondary-color);">🎉 Parabéns! 100% Concluído! 🎉</h3>
+            <p id="mensagem-celebracao">Você completou todas as tarefas em todos os dias!</p>
+            
+            <!-- CARTÃO DE PRÊMIO (APARECE SE CONFIGURADO) -->
+            <div class="premio-card" id="premio-card">
+                <h4><i class="fas fa-gift"></i> Prêmio Conquistado!</h4>
+                <p id="premio-texto"></p>
+            </div>
+        </div>
+        
+        <!-- QUADRO DE TAREFAS -->
+        <div class="task-board-container">
+            <div class="task-board-header">
+                <div class="tarefa-header" id="geral-emoji-header">Tarefas</div>
+                <!-- Dias da semana serão inseridos dinamicamente aqui -->
+            </div>
+            
+            <div class="task-board-body" id="task-board-body">
+                <!-- Linhas de tarefas serão adicionadas dinamicamente aqui -->
+            </div>
+            
+            <button class="add-task-row-btn" id="add-task-row-btn">
+                <i class="fas fa-plus"></i> Adicionar Nova Tarefa
+            </button>
+        </div>
+    </div>
+    
+    <!-- BOTÃO DE AJUDA FLUTUANTE -->
+    <button class="help-button" id="help-button">
+        <i class="fas fa-question"></i>
+    </button>
+    
+    <!-- ELEMENTOS DE CELEBRAÇÃO -->
+    <div class="celebration-overlay" id="celebration-overlay"></div>
+    <div class="big-emoji" id="big-emoji">🏆</div>
+    <div class="congrats-message" id="congrats-message">🎉 Parabéns! 100% Concluído! 🎉</div>
+
+    <script>
+        // Dados da aplicação
+        let appData = {
+            nomeCrianca: "",
+            premio: {
+                descricao: "",
+                ativo: true
+            },
+            emojis: [
+                {emoji: "😢", min: 0, max: 18},
+                {emoji: "😕", min: 19, max: 36},
+                {emoji: "😐", min: 37, max: 54},
+                {emoji: "🙂", min: 55, max: 72},
+                {emoji: "😊", min: 73, max: 89},
+                {emoji: "😄", min: 90, max: 100}
+            ],
+            premios: {
+                geral: "🏆",
+                dia: "⭐"
+            },
+            tarefasCadastradas: [
+                "Escovar os dentes",
+                "Fazer a lição",
+                "Arrumar a cama",
+                "Guardar brinquedos",
+                "Ler um livro",
+                "Ajudar em casa",
+                "Tomar banho",
+                "Alimentar o pet"
+            ],
+            tarefasQuadro: [
+                {tarefa: "Escovar os dentes", dias: [true, false, false, false, false, false, false]},
+                {tarefa: "Arrumar a cama", dias: [true, true, false, false, false, false, false]},
+                {tarefa: "Guardar brinquedos", dias: [false, false, false, false, false, false, false]}
+            ],
+            totaisDias: [0, 0, 0, 0, 0, 0, 0],
+            totalGeral: 0,
+            percentuaisDias: [0, 0, 0, 0, 0, 0, 0],
+            percentualGeral: 0,
+            celebracaoAtiva: false
+        };
+        
+        // Dias da semana
+        const diasSemana = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
+        const diasIds = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+        let diaAtualIndex = -1;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados salvos
+            loadSavedData();
+            
+            // Determinar dia atual
+            determinarDiaAtual();
+            
+            // Inicializar menu retrátil
+            initMenu();
+            
+            // Inicializar configurações
+            initConfig();
+            
+            // Inicializar quadro de tarefas
+            initTaskBoard();
+            
+            // Inicializar ajuda
+            initHelp();
+            
+            // Inicializar botão de reiniciar
+            initRestartButton();
+            
+            // Inicializar botão de reiniciar nas configurações
+            initResetQuadroButton();
+            
+            // Atualizar título com nome da criança
+            atualizarTituloComNome();
+            
+            // Calcular estatísticas iniciais
+            calculateStats();
+            
+            // Eventos do menu
+            document.getElementById('refresh-stats').addEventListener('click', function() {
+                calculateStats();
+                showNotification('Progresso atualizado!', 'success');
+            });
+            
+            document.getElementById('view-history').addEventListener('click', function() {
+                showNotification('Histórico em desenvolvimento...', 'info');
+            });
+            
+            // Botão de configurações
+            document.getElementById('go-config-btn').addEventListener('click', function() {
+                openConfigModal();
+            });
+            
+            document.getElementById('close-config').addEventListener('click', function() {
+                closeConfigModal();
+            });
+            
+            // Fechar modal ao clicar fora
+            document.getElementById('config-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeConfigModal();
+                }
+            });
+            
+            // Evento para atualizar título quando nome mudar
+            document.getElementById('nome-crianca').addEventListener('input', atualizarTituloComNome);
+        });
+        
+        // DETERMINAR DIA ATUAL
+        function determinarDiaAtual() {
+            const hoje = new Date();
+            // getDay() retorna 0=Domingo, 1=Segunda, etc.
+            // Nosso array começa com Segunda (0), então ajustamos
+            let diaSemana = hoje.getDay() - 1;
+            if (diaSemana === -1) diaSemana = 6; // Domingo vira 6
+            
+            diaAtualIndex = diaSemana;
+        }
+        
+        // ATUALIZAR TÍTULO COM NOME DA CRIANÇA
+        function atualizarTituloComNome() {
+            const nomeCrianca = document.getElementById('nome-crianca').value.trim();
+            const tituloPrincipal = document.getElementById('titulo-principal');
+            const nomeSidebar = document.getElementById('nome-crianca-sidebar');
+            
+            if (nomeCrianca) {
+                tituloPrincipal.textContent = `Tarefas de ${nomeCrianca}`;
+                nomeSidebar.textContent = `Acompanhe o desempenho de ${nomeCrianca}`;
+                
+                // Atualizar mensagem de celebração
+                const mensagemCelebracao = document.getElementById('mensagem-celebracao');
+                mensagemCelebracao.textContent = `${nomeCrianca} completou todas as tarefas em todos os dias!`;
+            } else {
+                tituloPrincipal.textContent = 'Tarefas Infantis';
+                nomeSidebar.textContent = 'Acompanhe seu desempenho';
+                
+                // Resetar mensagem de celebração
+                const mensagemCelebracao = document.getElementById('mensagem-celebracao');
+                mensagemCelebracao.textContent = 'Você completou todas as tarefas em todos os dias!';
+            }
+        }
+        
+        // INICIALIZAR BOTÃO DE REINICIAR
+        function initRestartButton() {
+            const restartButton = document.getElementById('restart-button');
+            restartButton.addEventListener('click', reiniciarTodasTarefas);
+        }
+        
+        // INICIALIZAR BOTÃO DE REINICIAR NAS CONFIGURAÇÕES
+        function initResetQuadroButton() {
+            const resetQuadroBtn = document.getElementById('reset-quadro-btn');
+            resetQuadroBtn.addEventListener('click', function() {
+                // Fechar modal primeiro
+                closeConfigModal();
+                
+                // Aguardar um pouco para o modal fechar
+                setTimeout(() => {
+                    reiniciarTodasTarefas();
+                }, 300);
+            });
+        }
+        
+        // REINICIAR TODAS AS TAREFAS
+        function reiniciarTodasTarefas() {
+            const nomeCrianca = appData.nomeCrianca || "você";
+            const confirmar = confirm(`Tem certeza que deseja reiniciar todas as tarefas de ${nomeCrianca}?\n\nIsso irá desmarcar todos os checkboxes, mas manterá as tarefas cadastradas.`);
+            
+            if (!confirmar) return;
+            
+            // Desmarcar todos os checkboxes
+            appData.tarefasQuadro.forEach(item => {
+                item.dias = [false, false, false, false, false, false, false];
+            });
+            
+            // Re-renderizar as linhas
+            renderTaskRows();
+            
+            // Recalcular estatísticas
+            calculateStats();
+            
+            // Ocultar botão de reiniciar
+            document.getElementById('restart-button-container').style.display = 'none';
+            
+            // Ocultar área de celebração
+            document.getElementById('emoji-grande-container').style.display = 'none';
+            
+            // Feedback visual
+            showNotification(`Todas as tarefas de ${nomeCrianca} foram reiniciadas!`, 'success');
+            
+            // Salvar no localStorage
+            saveToLocalStorage();
+            
+            // Pequena animação de confirmação
+            const restartButton = document.getElementById('restart-button');
+            if (restartButton) {
+                restartButton.innerHTML = '<i class="fas fa-check"></i> Reiniciado!';
+                restartButton.style.backgroundColor = '#4caf50';
+                
+                setTimeout(() => {
+                    restartButton.innerHTML = '<i class="fas fa-redo"></i> Reiniciar Todas as Tarefas';
+                    restartButton.style.backgroundColor = '';
+                }, 1500);
+            }
+        }
+        
+        // ATUALIZAR VISIBILIDADE DO BOTÃO DE REINICIAR
+        function atualizarBotaoReiniciar() {
+            const todasCompletas = todasTarefasCompletas();
+            const container = document.getElementById('restart-button-container');
+            
+            if (appData.percentualGeral === 100 && todasCompletas && appData.tarefasQuadro.length > 0) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+        
+        // MOSTRAR FEEDBACK DE SALVAMENTO
+        function showSaveFeedback() {
+            const feedback = document.getElementById('save-feedback');
+            feedback.classList.add('show');
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 2000);
+        }
+        
+        // MENU RETRÁTIL
+        function initMenu() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const mainContent = document.getElementById('main-content');
+            
+            menuToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+                mainContent.classList.toggle('shifted');
+            });
+            
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                mainContent.classList.remove('shifted');
+            });
+            
+            // Fechar menu ao tocar fora em mobile
+            document.addEventListener('click', function(e) {
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    mainContent.classList.remove('shifted');
+                }
+            });
+        }
+        
+        // CONFIGURAÇÕES
+        function initConfig() {
+            // Preencher nome da criança se existir
+            document.getElementById('nome-crianca').value = appData.nomeCrianca || '';
+            
+            // Preencher prêmio se existir
+            document.getElementById('premio-descricao').value = appData.premio.descricao || '';
+            document.getElementById('premio-ativo').checked = appData.premio.ativo !== false;
+            
+            // Preencher emojis de prêmio
+            document.getElementById('premio-geral').value = appData.premios.geral;
+            document.getElementById('premio-dia').value = appData.premios.dia;
+            document.getElementById('preview-geral').textContent = appData.premios.geral;
+            document.getElementById('preview-dia').textContent = appData.premios.dia;
+            
+            // Renderizar emojis
+            renderEmojiRanges();
+            
+            // Renderizar tarefas cadastradas
+            renderTarefasCadastradas();
+            
+            // Eventos dos inputs
+            document.getElementById('premio-geral').addEventListener('input', function() {
+                document.getElementById('preview-geral').textContent = this.value || "🏆";
+                document.getElementById('emoji-grande').textContent = this.value || "🏆";
+                document.getElementById('big-emoji').textContent = this.value || "🏆";
+                updateGeralEmojiHeader();
+            });
+            
+            document.getElementById('premio-dia').addEventListener('input', function() {
+                document.getElementById('preview-dia').textContent = this.value || "⭐";
+                updateAllTaskEmojis();
+            });
+            
+            document.getElementById('add-tarefa-btn').addEventListener('click', addNovaTarefa);
+            document.getElementById('add-emoji-btn').addEventListener('click', addNovoEmoji);
+            document.getElementById('save-config-btn').addEventListener('click', saveConfig);
+            
+            // Enter para adicionar tarefa
+            document.getElementById('nova-tarefa').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addNovaTarefa();
+            });
+        }
+        
+        // RENDERIZAR EMOJIS NO MODAL
+        function renderEmojiRanges() {
+            const container = document.getElementById('emoji-ranges');
+            container.innerHTML = '';
+            
+            appData.emojis.forEach((item, index) => {
+                const emojiRow = document.createElement('div');
+                emojiRow.className = 'emoji-row';
+                emojiRow.innerHTML = `
+                    <span>${item.emoji}</span>
+                    <div class="range-inputs">
+                        <input type="number" class="min-range" value="${item.min}" min="0" max="100" data-index="${index}">
+                        <span>% a</span>
+                        <input type="number" class="max-range" value="${item.max}" min="0" max="100" data-index="${index}">
+                        <span>%</span>
+                        <button class="delete-emoji-btn" data-index="${index}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(emojiRow);
+            });
+            
+            // Eventos
+            document.querySelectorAll('.delete-emoji-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    if (appData.emojis.length > 1) {
+                        appData.emojis.splice(index, 1);
+                        renderEmojiRanges();
+                        updateDayEmojis();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.min-range, .max-range').forEach(input => {
+                input.addEventListener('input', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const value = parseInt(this.value) || 0;
+                    
+                    if (this.classList.contains('min-range')) {
+                        appData.emojis[index].min = Math.min(100, Math.max(0, value));
+                    } else {
+                        appData.emojis[index].max = Math.min(100, Math.max(0, value));
+                    }
+                    
+                    // Ordenar emojis por range
+                    appData.emojis.sort((a, b) => a.min - b.min);
+                    
+                    // Atualizar emojis dos dias
+                    updateDayEmojis();
+                });
+            });
+        }
+        
+        // ADICIONAR NOVO EMOJI
+        function addNovoEmoji() {
+            const novoEmoji = prompt('Digite um emoji (ex: 😀):');
+            if (novoEmoji) {
+                appData.emojis.push({emoji: novoEmoji, min: 0, max: 100});
+                renderEmojiRanges();
+                updateDayEmojis();
+            }
+        }
+        
+        // RENDERIZAR TAREFAS CADASTRADAS
+        function renderTarefasCadastradas() {
+            const lista = document.getElementById('lista-tarefas');
+            lista.innerHTML = '';
+            
+            if (appData.tarefasCadastradas.length === 0) {
+                lista.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">Nenhuma tarefa cadastrada</div>';
+                return;
+            }
+            
+            appData.tarefasCadastradas.forEach((tarefa, index) => {
+                const item = document.createElement('div');
+                item.className = 'tarefa-item';
+                item.innerHTML = `
+                    <span>${tarefa}</span>
+                    <button class="delete-emoji-btn delete-tarefa-btn" data-index="${index}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                lista.appendChild(item);
+            });
+            
+            // Eventos
+            document.querySelectorAll('.delete-tarefa-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    appData.tarefasCadastradas.splice(index, 1);
+                    renderTarefasCadastradas();
+                    updateTaskSelectOptions();
+                });
+            });
+        }
+        
+        // ADICIONAR NOVA TAREFA
+        function addNovaTarefa() {
+            const input = document.getElementById('nova-tarefa');
+            const tarefa = input.value.trim();
+            
+            if (tarefa) {
+                if (!appData.tarefasCadastradas.includes(tarefa)) {
+                    appData.tarefasCadastradas.push(tarefa);
+                    renderTarefasCadastradas();
+                    input.value = '';
+                    updateTaskSelectOptions();
+                    
+                    // Feedback visual
+                    input.style.backgroundColor = '#e8f5e9';
+                    setTimeout(() => input.style.backgroundColor = '', 500);
+                }
+            }
+        }
+        
+        // ABRIR MODAL DE CONFIGURAÇÕES
+        function openConfigModal() {
+            document.getElementById('config-modal').classList.add('active');
+        }
+        
+        // FECHAR MODAL DE CONFIGURAÇÕES
+        function closeConfigModal() {
+            document.getElementById('config-modal').classList.remove('active');
+        }
+        
+        // QUADRO DE TAREFAS
+        function initTaskBoard() {
+            // Renderizar cabeçalho com destaque para dia atual
+            renderTaskBoardHeader();
+            
+            document.getElementById('add-task-row-btn').addEventListener('click', addTaskRow);
+            renderTaskRows();
+        }
+        
+        // RENDERIZAR CABEÇALHO DO QUADRO
+        function renderTaskBoardHeader() {
+            const header = document.querySelector('.task-board-header');
+            
+            // Limpar conteúdo existente
+            header.innerHTML = '';
+            
+            // Coluna de tarefas
+            const tarefaHeader = document.createElement('div');
+            tarefaHeader.className = 'tarefa-header';
+            tarefaHeader.textContent = 'Tarefas';
+            header.appendChild(tarefaHeader);
+            
+            // Dias da semana
+            diasSemana.forEach((dia, index) => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                
+                // Adicionar classe especial para dia atual
+                if (index === diaAtualIndex) {
+                    dayHeader.classList.add('today-header');
+                }
+                
+                dayHeader.innerHTML = `
+                    <span class="day-emoji" id="${diasIds[index]}-emoji">😊</span>
+                    ${dia}
+                `;
+                header.appendChild(dayHeader);
+            });
+            
+            // Coluna vazia (9ª coluna)
+            const vazioHeader = document.createElement('div');
+            vazioHeader.className = 'vazio-header';
+            header.appendChild(vazioHeader);
+        }
+        
+        // RENDERIZAR LINHAS DE TAREFAS
+        function renderTaskRows() {
+            const tbody = document.getElementById('task-board-body');
+            tbody.innerHTML = '';
+            
+            if (appData.tarefasQuadro.length === 0) {
+                tbody.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Adicione sua primeira tarefa!</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Toque no botão abaixo</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            appData.tarefasQuadro.forEach((item, rowIndex) => {
+                const row = document.createElement('div');
+                row.className = 'task-row';
+                row.id = `task-row-${rowIndex}`;
+                
+                // Coluna da tarefa
+                const descCell = document.createElement('div');
+                descCell.className = 'task-description';
+                
+                const selectContainer = document.createElement('div');
+                selectContainer.style.display = 'flex';
+                selectContainer.style.alignItems = 'center';
+                selectContainer.style.gap = '10px';
+                selectContainer.style.width = '100%';
+                
+                // Botão de remover tarefa
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-task-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.title = 'Remover esta tarefa do quadro';
+                removeBtn.setAttribute('data-row', rowIndex);
+                
+                removeBtn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-row'));
+                    removerTarefaDoQuadro(index);
+                });
+                
+                // Select de tarefa
+                const select = document.createElement('select');
+                select.className = 'task-select';
+                select.setAttribute('data-row', rowIndex);
+                
+                select.innerHTML = `
+                    <option value="">Escolha uma tarefa</option>
+                    ${appData.tarefasCadastradas.map(t => 
+                        `<option value="${t}" ${t === item.tarefa ? 'selected' : ''}>${t}</option>`
+                    ).join('')}
+                `;
+                
+                select.addEventListener('change', function() {
+                    const index = parseInt(this.getAttribute('data-row'));
+                    appData.tarefasQuadro[index].tarefa = this.value;
+                    calculateStats();
+                    updateAllTaskEmojis();
+                    updateGeralEmojiHeader();
+                    updateTaskRowStyle(index);
+                });
+                
+                selectContainer.appendChild(removeBtn);
+                selectContainer.appendChild(select);
+                descCell.appendChild(selectContainer);
+                row.appendChild(descCell);
+                
+                // Dias da semana
+                for (let i = 0; i < 7; i++) {
+                    const dayCell = document.createElement('div');
+                    
+                    // Adicionar classe especial para dia atual
+                    if (i === diaAtualIndex) {
+                        dayCell.className = 'day-cell today-cell';
+                    } else {
+                        dayCell.className = 'day-cell';
+                    }
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'day-checkbox';
+                    checkbox.checked = item.dias[i];
+                    checkbox.setAttribute('data-row', rowIndex);
+                    checkbox.setAttribute('data-day', i);
+                    
+                    checkbox.addEventListener('change', function() {
+                        const rowIndex = parseInt(this.getAttribute('data-row'));
+                        const dayIndex = parseInt(this.getAttribute('data-day'));
+                        
+                        appData.tarefasQuadro[rowIndex].dias[dayIndex] = this.checked;
+                        calculateStats();
+                        updateDayEmojis();
+                        updateAllTaskEmojis();
+                        updateGeralEmojiHeader();
+                        updateTaskRowStyle(rowIndex);
+                    });
+                    
+                    dayCell.appendChild(checkbox);
+                    row.appendChild(dayCell);
+                }
+                
+                // Coluna 9 vazia
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'task-emoji-cell';
+                emptyCell.id = `task-emoji-${rowIndex}`;
+                row.appendChild(emptyCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            updateAllTaskEmojis();
+            updateAllTaskRowStyles();
+        }
+        
+        // REMOVER TAREFA DO QUADRO
+        function removerTarefaDoQuadro(index) {
+            const nomeCrianca = appData.nomeCrianca || "a criança";
+            const confirmar = confirm(`Tem certeza que deseja remover esta tarefa do quadro de ${nomeCrianca}?`);
+            
+            if (!confirmar) return;
+            
+            // Remover tarefa do quadro
+            appData.tarefasQuadro.splice(index, 1);
+            
+            // Re-renderizar o quadro
+            renderTaskRows();
+            
+            // Recalcular estatísticas
+            calculateStats();
+            
+            // Feedback
+            showNotification('Tarefa removida do quadro!', 'success');
+            
+            // Salvar no localStorage
+            saveToLocalStorage();
+        }
+        
+        // ADICIONAR NOVA LINHA DE TAREFA
+        function addTaskRow() {
+            appData.tarefasQuadro.push({
+                tarefa: '',
+                dias: [false, false, false, false, false, false, false]
+            });
+            
+            renderTaskRows();
+            
+            // Rolar para a nova linha
+            setTimeout(() => {
+                const tbody = document.getElementById('task-board-body');
+                tbody.scrollTop = tbody.scrollHeight;
+            }, 100);
+        }
+        
+        // ATUALIZAR OPÇÕES DO SELECT
+        function updateTaskSelectOptions() {
+            const selects = document.querySelectorAll('.task-select');
+            
+            selects.forEach(select => {
+                const currentValue = select.value;
+                const rowIndex = parseInt(select.getAttribute('data-row'));
+                
+                select.innerHTML = `
+                    <option value="">Escolha uma tarefa</option>
+                    ${appData.tarefasCadastradas.map(t => 
+                        `<option value="${t}" ${t === appData.tarefasQuadro[rowIndex].tarefa ? 'selected' : ''}>${t}</option>`
+                    ).join('')}
+                `;
+                
+                if (appData.tarefasCadastradas.includes(currentValue)) {
+                    select.value = currentValue;
+                }
+            });
+        }
+        
+        // ATUALIZAR ESTILO DA LINHA
+        function updateTaskRowStyle(rowIndex) {
+            const row = document.getElementById(`task-row-${rowIndex}`);
+            const item = appData.tarefasQuadro[rowIndex];
+            
+            const todosCompletos = item.tarefa && item.dias.every(dia => dia === true);
+            
+            if (todosCompletos) {
+                row.classList.add('completed');
+            } else {
+                row.classList.remove('completed');
+            }
+        }
+        
+        // ATUALIZAR TODOS OS ESTILOS
+        function updateAllTaskRowStyles() {
+            appData.tarefasQuadro.forEach((item, rowIndex) => {
+                updateTaskRowStyle(rowIndex);
+            });
+        }
+        
+        // ATUALIZAR TODOS OS EMOJIS DAS TAREFAS
+        function updateAllTaskEmojis() {
+            appData.tarefasQuadro.forEach((item, rowIndex) => {
+                updateTaskRowEmoji(rowIndex);
+            });
+        }
+        
+        // ATUALIZAR EMOJI DA TAREFA
+        function updateTaskRowEmoji(rowIndex) {
+            const emojiCell = document.getElementById(`task-emoji-${rowIndex}`);
+            const item = appData.tarefasQuadro[rowIndex];
+            
+            const todosCompletos = item.tarefa && item.dias.every(dia => dia === true);
+            emojiCell.textContent = todosCompletos ? appData.premios.dia : '';
+        }
+        
+        // CALCULAR ESTATÍSTICAS
+        function calculateStats() {
+            // Resetar
+            appData.totaisDias = [0, 0, 0, 0, 0, 0, 0];
+            appData.totalGeral = 0;
+            
+            // Calcular totais
+            appData.tarefasQuadro.forEach(item => {
+                if (item.tarefa) {
+                    for (let i = 0; i < 7; i++) {
+                        if (item.dias[i]) {
+                            appData.totaisDias[i]++;
+                            appData.totalGeral++;
+                        }
+                    }
+                }
+            });
+            
+            // Calcular percentuais
+            const totalTarefasSelecionadas = appData.tarefasQuadro.filter(item => item.tarefa).length;
+            
+            for (let i = 0; i < 7; i++) {
+                appData.percentuaisDias[i] = totalTarefasSelecionadas > 0 
+                    ? Math.round((appData.totaisDias[i] / totalTarefasSelecionadas) * 100) 
+                    : 0;
+            }
+            
+            appData.percentualGeral = totalTarefasSelecionadas > 0
+                ? Math.round((appData.totalGeral / (totalTarefasSelecionadas * 7)) * 100)
+                : 0;
+            
+            // Atualizar display
+            updateStatsDisplay();
+            
+            // Atualizar emojis dos dias
+            updateDayEmojis();
+            
+            // Atualizar botão de reiniciar
+            atualizarBotaoReiniciar();
+            
+            // Verificar celebração
+            const todasCompletas = todasTarefasCompletas();
+            
+            if (appData.percentualGeral === 100 && totalTarefasSelecionadas > 0 && todasCompletas && !appData.celebracaoAtiva) {
+                triggerCelebracao();
+            } else if ((appData.percentualGeral < 100 || !todasCompletas) && appData.celebracaoAtiva) {
+                removerCelebracao();
+            }
+        }
+        
+        // VERIFICAR SE TODAS AS TAREFAS ESTÃO COMPLETAS
+        function todasTarefasCompletas() {
+            const tarefasSelecionadas = appData.tarefasQuadro.filter(item => item.tarefa);
+            if (tarefasSelecionadas.length === 0) return false;
+            
+            return tarefasSelecionadas.every(item => 
+                item.dias.every(dia => dia === true)
+            );
+        }
+        
+        // ATUALIZAR DISPLAY DAS ESTATÍSTICAS
+        function updateStatsDisplay() {
+            // Percentual geral
+            const progressPercent = appData.percentualGeral;
+            
+            document.getElementById('progress-percentage').textContent = progressPercent + '%';
+            document.getElementById('progress-text').textContent = progressPercent + '%';
+            document.getElementById('home-progress-text').textContent = progressPercent + '%';
+            
+            // Atualizar barras de progresso
+            document.getElementById('main-progress-bar').style.width = progressPercent + '%';
+            document.getElementById('home-progress-bar').style.width = progressPercent + '%';
+            
+            // Contadores
+            const totalTarefas = appData.tarefasQuadro.filter(item => item.tarefa).length;
+            const tarefasCompletas = appData.tarefasQuadro.filter(item => 
+                item.tarefa && item.dias.every(dia => dia === true)
+            ).length;
+            
+            document.getElementById('completed-count').textContent = tarefasCompletas;
+            document.getElementById('total-count').textContent = totalTarefas;
+        }
+        
+        // ATUALIZAR EMOJIS DOS DIAS
+        function updateDayEmojis() {
+            for (let i = 0; i < 7; i++) {
+                const percentual = appData.percentuaisDias[i];
+                const emoji = getEmojiForPercentage(percentual);
+                const emojiElement = document.getElementById(`${diasIds[i]}-emoji`);
+                
+                if (emojiElement) {
+                    emojiElement.textContent = emoji;
+                }
+            }
+        }
+        
+        // ATUALIZAR CABEÇALHO DO EMOJI GERAL
+        function updateGeralEmojiHeader() {
+            const header = document.getElementById('geral-emoji-header');
+            const todasCompletas = todasTarefasCompletas();
+            
+            if (appData.percentualGeral === 100 && todasCompletas) {
+                header.innerHTML = `Tarefas`;
+            } else {
+                header.innerHTML = `Tarefas`;
+            }
+        }
+        
+        // OBTER EMOJI POR PORCENTAGEM
+        function getEmojiForPercentage(percent) {
+            const sortedEmojis = [...appData.emojis].sort((a, b) => a.min - b.min);
+            
+            for (const item of sortedEmojis) {
+                if (percent >= item.min && percent <= item.max) {
+                    return item.emoji;
+                }
+            }
+            
+            // Fallback
+            if (percent === 0) return "😢";
+            if (percent <= 30) return "😕";
+            if (percent <= 60) return "😐";
+            if (percent <= 80) return "🙂";
+            if (percent <= 95) return "😊";
+            return "😄";
+        }
+        
+        // AJUDA
+        function initHelp() {
+            const helpButton = document.getElementById('help-button');
+            
+            helpButton.addEventListener('click', function() {
+                showHelpModal();
+            });
+        }
+        
+        // MOSTRAR MODAL DE AJUDA
+        function showHelpModal() {
+            const modalHTML = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:3000; display:flex; align-items:center; justify-content:center;">
+                    <div style="background:white; border-radius:20px; padding:30px; max-width:500px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+                        <h2 style="color:var(--primary-color); margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+                            <i class="fas fa-question-circle"></i> Como Usar
+                        </h2>
+                        <div style="margin-bottom:25px;">
+                            <h3 style="color:var(--secondary-color); margin-bottom:10px;">💾 Salvar Configurações</h3>
+                            <ul style="padding-left:20px; margin-bottom:15px;">
+                                <li style="margin-bottom:8px;">Ao salvar, um <strong>feedback visual</strong> aparece no centro da tela</li>
+                                <li style="margin-bottom:8px;">Mensagem verde com ícone de confirmação</li>
+                                <li style="margin-bottom:8px;">Desaparece automaticamente após 2 segundos</li>
+                                <li style="margin-bottom:8px;">Todas as mudanças são salvas automaticamente</li>
+                            </ul>
+                            
+                            <h3 style="color:var(--secondary-color); margin-bottom:10px;">🔄 Reiniciar Quadro</h3>
+                            <ul style="padding-left:20px; margin-bottom:15px;">
+                                <li style="margin-bottom:8px;"><strong>Nas configurações</strong>: Botão laranja "Reiniciar Quadro de Tarefas"</li>
+                                <li style="margin-bottom:8px;"><strong>Quando 100%</strong>: Botão especial aparece automaticamente</li>
+                                <li style="margin-bottom:8px;">Ambos fazem a mesma coisa: desmarcam todos os checkboxes</li>
+                                <li style="margin-bottom:8px;">As tarefas cadastradas são mantidas</li>
+                            </ul>
+                            
+                            <h3 style="color:var(--secondary-color); margin-bottom:10px;">📅 Dia Atual</h3>
+                            <ul style="padding-left:20px; margin-bottom:15px;">
+                                <li style="margin-bottom:8px;">O <strong>dia de hoje</strong> é destacado em amarelo</li>
+                                <li style="margin-bottom:8px;">No cabeçalho aparece "HOJE" no canto</li>
+                                <li style="margin-bottom:8px;">Nas linhas, o dia atual tem fundo amarelo claro</li>
+                                <li style="margin-bottom:8px;">Ajuda a focar nas tarefas do dia atual</li>
+                            </ul>
+                            
+                            <h3 style="color:var(--secondary-color); margin-bottom:10px;">🎁 Sistema de Prêmios</h3>
+                            <ul style="padding-left:20px; margin-bottom:15px;">
+                                <li style="margin-bottom:8px;">Configure um <strong>prêmio especial</strong> nas configurações</li>
+                                <li style="margin-bottom:8px;">Ative/desative a exibição do prêmio</li>
+                                <li style="margin-bottom:8px;">Quando atingir 100%, o prêmio aparece na celebração</li>
+                                <li style="margin-bottom:8px;">Motiva a criança a completar todas as tarefas</li>
+                            </ul>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background:var(--primary-color); color:white; border:none; padding:12px 25px; border-radius:10px; font-size:1.1rem; font-weight:bold; cursor:pointer; width:100%;">
+                            Entendi!
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+        
+        // MOSTRAR NOTIFICAÇÃO
+        function showNotification(message, type) {
+            const colors = {
+                'success': '#4caf50',
+                'info': '#2196f3',
+                'warning': '#ff9800',
+                'error': '#f44336'
+            };
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type] || colors.info};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 4000;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 300px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+            
+            // Adicionar estilos de animação se não existirem
+            if (!document.querySelector('#notification-styles')) {
+                const styles = document.createElement('style');
+                styles.id = 'notification-styles';
+                styles.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOutRight {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(styles);
+            }
+        }
+        
+        // CELEBRAÇÃO
+        function triggerCelebracao() {
+            if (appData.celebracaoAtiva) return;
+            
+            appData.celebracaoAtiva = true;
+            
+            // Mostrar elementos
+            document.getElementById('celebration-overlay').style.display = 'block';
+            document.getElementById('big-emoji').style.display = 'block';
+            document.getElementById('congrats-message').style.display = 'block';
+            document.getElementById('emoji-grande-container').style.display = 'block';
+            
+            // Mostrar prêmio se configurado
+            const premioCard = document.getElementById('premio-card');
+            const premioTexto = document.getElementById('premio-texto');
+            
+            if (appData.premio.ativo && appData.premio.descricao) {
+                premioTexto.textContent = appData.premio.descricao;
+                premioCard.style.display = 'block';
+            } else {
+                premioCard.style.display = 'none';
+            }
+            
+            // Criar efeitos
+            criarConfetes();
+            criarFogos();
+            tocarSomCelebracao();
+            
+            // Parar após 8s
+            setTimeout(() => {
+                document.getElementById('celebration-overlay').style.display = 'none';
+                document.getElementById('big-emoji').style.display = 'none';
+                document.getElementById('congrats-message').style.display = 'none';
+                appData.celebracaoAtiva = false;
+            }, 8000);
+        }
+        
+        function removerCelebracao() {
+            appData.celebracaoAtiva = false;
+            document.getElementById('celebration-overlay').style.display = 'none';
+            document.getElementById('big-emoji').style.display = 'none';
+            document.getElementById('congrats-message').style.display = 'none';
+            document.getElementById('emoji-grande-container').style.display = 'none';
+        }
+        
+        // CRIAR CONFETES
+        function criarConfetes() {
+            const overlay = document.getElementById('celebration-overlay');
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff9900'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                const left = Math.random() * 100;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = Math.random() * 10 + 5;
+                const shape = Math.random() > 0.5 ? '50%' : '0';
+                
+                confetti.style.left = `${left}vw`;
+                confetti.style.top = '-10vh';
+                confetti.style.backgroundColor = color;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.borderRadius = shape;
+                
+                overlay.appendChild(confetti);
+                
+                // Animação
+                const duration = Math.random() * 3 + 2;
+                const delay = Math.random();
+                
+                confetti.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: 0 },
+                    { transform: `translate(${Math.random() * 100 - 50}px, 10vh) rotate(180deg)`, opacity: 1 },
+                    { transform: `translate(${Math.random() * 200 - 100}px, 110vh) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    delay: delay * 1000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+            }
+        }
+        
+        // CRIAR FOGOS
+        function criarFogos() {
+            const overlay = document.getElementById('celebration-overlay');
+            const colors = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ff9900'];
+            
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    
+                    const startLeft = Math.random() * 80 + 10;
+                    const endBottom = Math.random() * 60 + 20;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    firework.style.left = `${startLeft}vw`;
+                    firework.style.bottom = '0';
+                    firework.style.backgroundColor = color;
+                    firework.style.boxShadow = `0 0 10px 2px ${color}`;
+                    
+                    overlay.appendChild(firework);
+                    
+                    // Animação
+                    const animation = firework.animate([
+                        { transform: 'scale(1)', bottom: '0', opacity: 1 },
+                        { transform: 'scale(1)', bottom: `${endBottom}vh`, opacity: 1 }
+                    ], { duration: 800, easing: 'ease-out' });
+                    
+                    animation.onfinish = () => {
+                        firework.remove();
+                        criarExplosao(startLeft, endBottom, color);
+                    };
+                }, i * 300);
+            }
+        }
+        
+        // CRIAR EXPLOSÃO
+        function criarExplosao(left, bottom, color) {
+            const overlay = document.getElementById('celebration-overlay');
+            const particleCount = 25;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework';
+                particle.style.width = '6px';
+                particle.style.height = '6px';
+                particle.style.backgroundColor = color;
+                particle.style.boxShadow = `0 0 8px 1px ${color}`;
+                particle.style.left = `${left}vw`;
+                particle.style.bottom = `${bottom}vh`;
+                particle.style.position = 'absolute';
+                
+                overlay.appendChild(particle);
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 50 + 20;
+                const duration = Math.random() * 1000 + 500;
+                
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0)`, opacity: 0 }
+                ], { duration: duration, easing: 'ease-out' });
+                
+                setTimeout(() => particle.remove(), duration);
+            }
+        }
+        
+        // SOM DE CELEBRAÇÃO
+        function tocarSomCelebracao() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Primeiro som
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.5);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                // Segundo som
+                setTimeout(() => {
+                    const oscillator2 = audioContext.createOscillator();
+                    const gainNode2 = audioContext.createGain();
+                    oscillator2.connect(gainNode2);
+                    gainNode2.connect(audioContext.destination);
+                    
+                    oscillator2.frequency.setValueAtTime(659.25, audioContext.currentTime);
+                    oscillator2.frequency.exponentialRampToValueAtTime(1318.51, audioContext.currentTime + 0.5);
+                    gainNode2.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator2.start();
+                    oscillator2.stop(audioContext.currentTime + 0.5);
+                }, 200);
+            } catch (e) {
+                // Silenciar erro se áudio não for permitido
+            }
+        }
+        
+        // SALVAR CONFIGURAÇÕES
+        function saveConfig() {
+            // Atualizar nome da criança
+            appData.nomeCrianca = document.getElementById('nome-crianca').value.trim();
+            
+            // Atualizar prêmio
+            appData.premio.descricao = document.getElementById('premio-descricao').value.trim();
+            appData.premio.ativo = document.getElementById('premio-ativo').checked;
+            
+            // Atualizar prêmios (emojis)
+            appData.premios.geral = document.getElementById('premio-geral').value || "🏆";
+            appData.premios.dia = document.getElementById('premio-dia').value || "⭐";
+            
+            // Atualizar título
+            atualizarTituloComNome();
+            
+            // Salvar no localStorage
+            saveToLocalStorage();
+            
+            // Atualizar visual
+            updateGeralEmojiHeader();
+            updateAllTaskEmojis();
+            updateDayEmojis();
+            document.getElementById('emoji-grande').textContent = appData.premios.geral;
+            document.getElementById('big-emoji').textContent = appData.premios.geral;
+            
+            // Mostrar feedback visual
+            showSaveFeedback();
+            
+            // Animação no botão de salvar
+            const saveBtn = document.getElementById('save-config-btn');
+            saveBtn.classList.add('save-success');
+            
+            setTimeout(() => {
+                saveBtn.classList.remove('save-success');
+                
+                // Opcional: fechar modal após salvar
+                setTimeout(() => {
+                    closeConfigModal();
+                }, 500);
+            }, 500);
+        }
+        
+        // SALVAR NO LOCALSTORAGE
+        function saveToLocalStorage() {
+            localStorage.setItem('tarefasInfantisIpad', JSON.stringify(appData));
+        }
+        
+        // CARREGAR DADOS SALVOS
+        function loadSavedData() {
+            const savedData = localStorage.getItem('tarefasInfantisIpad');
+            
+            if (savedData) {
+                try {
+                    const parsedData = JSON.parse(savedData);
+                    if (parsedData.nomeCrianca !== undefined) appData.nomeCrianca = parsedData.nomeCrianca;
+                    if (parsedData.premio) appData.premio = parsedData.premio;
+                    if (parsedData.emojis) appData.emojis = parsedData.emojis;
+                    if (parsedData.premios) appData.premios = parsedData.premios;
+                    if (parsedData.tarefasCadastradas) appData.tarefasCadastradas = parsedData.tarefasCadastradas;
+                    if (parsedData.tarefasQuadro) appData.tarefasQuadro = parsedData.tarefasQuadro;
+                } catch (e) {
+                    console.log("Usando dados padrão");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
